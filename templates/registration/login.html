@@ -2,6 +2,178 @@
 
 {% block title %}Login - Attendance Portal{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Center the login card perfectly in the viewport */
+    .login-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 120px);
+        width: 100%;
+        margin: -32px 0;
+        padding: 20px;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 440px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--card-border);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Decorative subtle light highlight on the card */
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--primary-accent);
+    }
+
+    /* Quick Demo Sign-In styling */
+    .demo-credentials-card {
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid var(--card-border);
+        text-align: left;
+    }
+
+    .demo-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .demo-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .demo-grid-three {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+    }
+
+    .demo-btn {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        outline: none;
+    }
+
+    body.light-theme .demo-btn {
+        background: rgba(15, 23, 42, 0.02);
+    }
+
+    .demo-btn:hover {
+        background: rgba(96, 165, 250, 0.08);
+        border-color: rgba(96, 165, 250, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(96, 165, 250, 0.15);
+    }
+
+    body.light-theme .demo-btn:hover {
+        background: rgba(59, 130, 246, 0.06);
+        border-color: rgba(59, 130, 246, 0.2);
+        box-shadow: 0 6px 15px rgba(59, 130, 246, 0.1);
+    }
+
+    .demo-btn-admin:hover {
+        background: rgba(16, 185, 129, 0.08);
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.15);
+    }
+
+    body.light-theme .demo-btn-admin:hover {
+        background: rgba(16, 185, 129, 0.06);
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.1);
+    }
+
+    .demo-role {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .demo-btn-admin .demo-role {
+        color: var(--present-color);
+    }
+
+    .demo-btn-faculty .demo-role {
+        color: #a78bfa;
+    }
+
+    .demo-user {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-family: monospace;
+    }
+
+    .demo-btn-faculty-small {
+        padding: 8px 10px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .demo-user-small {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-family: monospace;
+        transition: color 0.2s;
+    }
+
+    .demo-btn-faculty-small:hover .demo-user-small {
+        color: #a78bfa;
+    }
+
+    /* Autofill highlight animation */
+    @keyframes highlight-glow {
+        0% {
+            box-shadow: 0 0 0 0px rgba(96, 165, 250, 0.5);
+            border-color: rgba(96, 165, 250, 0.8);
+        }
+        50% {
+            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
+            border-color: rgba(96, 165, 250, 1);
+        }
+        100% {
+            box-shadow: 0 0 0 0px rgba(96, 165, 250, 0);
+            border-color: var(--card-border);
+        }
+    }
+
+    .autofill-highlight {
+        animation: highlight-glow 0.8s ease-out;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="login-wrapper">
     <div class="glass-panel login-card">
@@ -25,16 +197,65 @@
                 <input type="password" name="password" required id="id_password" class="form-input" style="width: 100%;" placeholder="Enter password">
             </div>
             
-            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-weight: 600;">
                 Sign In
             </button>
         </form>
         
-        <div style="margin-top: 24px; font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
-            <strong>Demo Access Credentials:</strong><br>
-            • Admin: <code>admin</code> / <code>adminpassword</code><br>
-            • Teachers: <code>rahul</code>, <code>priyanka</code>, <code>amit</code>, <code>sneha</code>, <code>vikrant</code> (password: <code>password123</code>)
+        <!-- Quick Demo Credentials Box -->
+        <div class="demo-credentials-card">
+            <div class="demo-title">
+                🔑 Quick Demo Access (Click to Auto-fill)
+            </div>
+            
+            <div class="demo-grid">
+                <button type="button" class="demo-btn demo-btn-admin" onclick="fillCredentials('admin', 'adminpassword')" title="Click to fill Admin credentials">
+                    <span class="demo-role">System Admin</span>
+                    <span class="demo-user">admin</span>
+                </button>
+                
+                <button type="button" class="demo-btn demo-btn-faculty" onclick="fillCredentials('rahul', 'password123')" title="Click to fill Faculty (Rahul) credentials">
+                    <span class="demo-role">Faculty (Rahul)</span>
+                    <span class="demo-user">rahul</span>
+                </button>
+            </div>
+            
+            <div class="demo-grid-three">
+                <button type="button" class="demo-btn demo-btn-faculty-small" onclick="fillCredentials('priyanka', 'password123')" title="Click to fill Faculty (Priyanka) credentials">
+                    <span class="demo-user-small">priyanka</span>
+                </button>
+                <button type="button" class="demo-btn demo-btn-faculty-small" onclick="fillCredentials('amit', 'password123')" title="Click to fill Faculty (Amit) credentials">
+                    <span class="demo-user-small">amit</span>
+                </button>
+                <button type="button" class="demo-btn demo-btn-faculty-small" onclick="fillCredentials('sneha', 'password123')" title="Click to fill Faculty (Sneha) credentials">
+                    <span class="demo-user-small">sneha</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function fillCredentials(username, password) {
+        const usernameInput = document.getElementById('id_username');
+        const passwordInput = document.getElementById('id_password');
+        
+        if (usernameInput && passwordInput) {
+            usernameInput.value = username;
+            passwordInput.value = password;
+            
+            // Highlight inputs with micro-animation
+            usernameInput.classList.remove('autofill-highlight');
+            passwordInput.classList.remove('autofill-highlight');
+            
+            // Trigger reflow to restart animation
+            void usernameInput.offsetWidth;
+            
+            usernameInput.classList.add('autofill-highlight');
+            passwordInput.classList.add('autofill-highlight');
+        }
+    }
+</script>
 {% endblock %}
