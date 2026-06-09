@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.db.models import Q
@@ -23,35 +24,66 @@ def custom_500_view(request):
     return render(request, '500.html', status=500)
 
 
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+class StaffRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            return redirect('dashboard')
+        return super().handle_no_permission()
+
+
 class DashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'dashboard.html'
+    def get_template_names(self):
+        if hasattr(self.request.user, 'student_profile'):
+            return ['students/dashboard.html']
+        return ['dashboard.html']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = datetime.date.today()
+        user = self.request.user
         
-        # Core statistics
-        context['total_students'] = Student.objects.count()
-        context['total_teachers'] = Teacher.objects.count()
-        
-        # Today's attendance session statistics
-        today_sessions = AttendanceSession.objects.filter(attendance_date=today)
-        context['present_today'] = AttendanceEntry.objects.filter(
-            attendance_session__in=today_sessions, status='Present'
-        ).count()
-        context['absent_today'] = AttendanceEntry.objects.filter(
-            attendance_session__in=today_sessions, status='Absent'
-        ).count()
-        
-        # Recent Activity Feed
-        context['recent_activities'] = ActivityLog.objects.select_related('user').all()[:10]
-        
+        if hasattr(user, 'student_profile'):
+            # Student view context
+            student = user.student_profile
+            entries = AttendanceEntry.objects.filter(student=student).select_related('attendance_session', 'attendance_session__marked_by').order_by('-attendance_session__attendance_date')
+            
+            total = entries.count()
+            present = entries.filter(status='Present').count()
+            absent = entries.filter(status='Absent').count()
+            percentage = (present / total * 100) if total > 0 else 0
+            
+            context['student'] = student
+            context['entries'] = entries
+            context['total_days'] = total
+            context['present_days'] = present
+            context['absent_days'] = absent
+            context['attendance_percentage'] = round(percentage, 1)
+        else:
+            # General / Teacher view context
+            today = datetime.date.today()
+            context['total_students'] = Student.objects.count()
+            context['total_teachers'] = Teacher.objects.count()
+            
+            today_sessions = AttendanceSession.objects.filter(attendance_date=today)
+            context['present_today'] = AttendanceEntry.objects.filter(
+                attendance_session__in=today_sessions, status='Present'
+            ).count()
+            context['absent_today'] = AttendanceEntry.objects.filter(
+                attendance_session__in=today_sessions, status='Absent'
+            ).count()
+            
+            context['recent_activities'] = ActivityLog.objects.select_related('user').all()[:10]
+            
         return context
 
 
 # --- STUDENT CRUD ---
 
-class StudentListView(LoginRequiredMixin, ListView):
+class StudentListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     model = Student
     template_name = 'students/student_list.html'
     context_object_name = 'students'
@@ -86,7 +118,7 @@ class StudentListView(LoginRequiredMixin, ListView):
         return context
 
 
-class StudentCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class StudentCreateView(LoginRequiredMixin, StaffRequiredMixin, SuccessMessageMixin, CreateView):
     model = Student
     form_class = StudentForm
     template_name = 'students/student_form.html'
@@ -94,16 +126,33 @@ class StudentCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     success_message = "Student added successfully."
 
     def form_valid(self, form):
-        response = super().form_valid(form)
+        student = form.save(commit=False)
+        username = student.email.split('@')[0] if student.email else student.name.lower().replace(' ', '.')
+        base_username = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+            
+        user = User.objects.create_user(
+            username=username,
+            email=student.email or '',
+            password="password123"
+        )
+        student.user = user
+        student.save()
+        form.save_m2m()
+        
         ActivityLog.objects.create(
             activity_type='Student Added',
-            description=f"Added student: {self.object.name} (Roll: {self.object.roll_number}, Class: {self.object.class_name}-{self.object.section})",
+            description=f"Added student: {student.name} (Roll: {student.roll_number}, Class: {student.class_name}-{student.section})",
             user=self.request.user
         )
-        return response
+        messages.success(self.request, self.success_message)
+        return redirect(self.success_url)
 
 
-class StudentUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class StudentUpdateView(LoginRequiredMixin, StaffRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Student
     form_class = StudentForm
     template_name = 'students/student_form.html'
@@ -111,24 +160,43 @@ class StudentUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_message = "Student updated successfully."
 
     def form_valid(self, form):
-        response = super().form_valid(form)
+        student = form.save()
+        if not student.user:
+            username = student.email.split('@')[0] if student.email else student.name.lower().replace(' ', '.')
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            user = User.objects.create_user(username=username, email=student.email or '', password="password123")
+            student.user = user
+            student.save()
+        elif student.email:
+            u = student.user
+            u.email = student.email
+            u.save()
+
         ActivityLog.objects.create(
             activity_type='Student Edited',
-            description=f"Updated student: {self.object.name} (Roll: {self.object.roll_number}, Class: {self.object.class_name}-{self.object.section})",
+            description=f"Updated student: {student.name} (Roll: {student.roll_number}, Class: {student.class_name}-{student.section})",
             user=self.request.user
         )
-        return response
+        messages.success(self.request, self.success_message)
+        return redirect(self.success_url)
 
 
-class StudentDeleteView(LoginRequiredMixin, DeleteView):
+class StudentDeleteView(LoginRequiredMixin, StaffRequiredMixin, DeleteView):
     model = Student
     template_name = 'students/student_confirm_delete.html'
     success_url = reverse_lazy('student_list')
 
     def form_valid(self, form):
         student = self.get_object()
+        user = student.user
         student_desc = f"{student.name} (Roll: {student.roll_number}, Class: {student.class_name}-{student.section})"
         response = super().form_valid(form)
+        if user:
+            user.delete()
         ActivityLog.objects.create(
             activity_type='Student Deleted',
             description=f"Deleted student: {student_desc}",
@@ -140,14 +208,14 @@ class StudentDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- TEACHER CRUD ---
 
-class TeacherListView(LoginRequiredMixin, ListView):
+class TeacherListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     model = Teacher
     template_name = 'teachers/teacher_list.html'
     context_object_name = 'teachers'
     paginate_by = 25
 
 
-class TeacherCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class TeacherCreateView(LoginRequiredMixin, StaffRequiredMixin, SuccessMessageMixin, CreateView):
     model = Teacher
     form_class = TeacherForm
     template_name = 'teachers/teacher_form.html'
@@ -164,7 +232,7 @@ class TeacherCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return response
 
 
-class TeacherUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class TeacherUpdateView(LoginRequiredMixin, StaffRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Teacher
     form_class = TeacherForm
     template_name = 'teachers/teacher_form.html'
@@ -181,7 +249,7 @@ class TeacherUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return response
 
 
-class TeacherDeleteView(LoginRequiredMixin, DeleteView):
+class TeacherDeleteView(LoginRequiredMixin, StaffRequiredMixin, DeleteView):
     model = Teacher
     template_name = 'students/student_confirm_delete.html'
     success_url = reverse_lazy('teacher_list')
@@ -206,7 +274,7 @@ class TeacherDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- ATTENDANCE VIEWS ---
 
-class MarkAttendanceView(LoginRequiredMixin, View):
+class MarkAttendanceView(LoginRequiredMixin, StaffRequiredMixin, View):
     def get(self, request):
         classes = Student.objects.values_list('class_name', flat=True).distinct().order_by('class_name')
         sections = Student.objects.values_list('section', flat=True).distinct().order_by('section')
@@ -226,7 +294,7 @@ class MarkAttendanceView(LoginRequiredMixin, View):
         return render(request, 'attendance/mark_attendance.html', context)
 
 
-class AttendanceReportView(LoginRequiredMixin, View):
+class AttendanceReportView(LoginRequiredMixin, StaffRequiredMixin, View):
     def get(self, request):
         context = {
             'today_str': datetime.date.today().strftime("%Y-%m-%d"),
@@ -236,7 +304,7 @@ class AttendanceReportView(LoginRequiredMixin, View):
         return render(request, 'attendance/attendance_report.html', context)
 
 
-class AttendanceEditView(LoginRequiredMixin, View):
+class AttendanceEditView(LoginRequiredMixin, StaffRequiredMixin, View):
     def get(self, request, session_id):
         session = get_object_or_404(AttendanceSession, id=session_id)
         entries = session.entries.select_related('student').all().order_by('student__roll_number')
@@ -247,7 +315,7 @@ class AttendanceEditView(LoginRequiredMixin, View):
         return render(request, 'attendance/attendance_edit.html', context)
 
 
-class ExportCSVView(LoginRequiredMixin, View):
+class ExportCSVView(LoginRequiredMixin, StaffRequiredMixin, View):
     def get(self, request, session_id):
         session = get_object_or_404(AttendanceSession, id=session_id)
         return AttendanceService.export_csv(session)
@@ -255,7 +323,7 @@ class ExportCSVView(LoginRequiredMixin, View):
 
 # --- DYNAMIC JSON APIs (NO STATIC PAGES IN WORKFLOW) ---
 
-class APISessionsView(LoginRequiredMixin, View):
+class APISessionsView(LoginRequiredMixin, StaffRequiredMixin, View):
     """Returns JSON list of attendance sessions for a specific date."""
     def get(self, request):
         date_str = request.GET.get('date', '').strip()
@@ -278,7 +346,7 @@ class APISessionsView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'success', 'sessions': data})
 
 
-class APIStudentsView(LoginRequiredMixin, View):
+class APIStudentsView(LoginRequiredMixin, StaffRequiredMixin, View):
     """Returns students in a class or checks if attendance already exists."""
     def get(self, request):
         date_str = request.GET.get('date', '').strip()
@@ -320,7 +388,7 @@ class APIStudentsView(LoginRequiredMixin, View):
         })
 
 
-class APIMarkView(LoginRequiredMixin, View):
+class APIMarkView(LoginRequiredMixin, StaffRequiredMixin, View):
     """Saves attendance dynamically via JSON POST."""
     def post(self, request):
         try:
@@ -366,7 +434,7 @@ class APIMarkView(LoginRequiredMixin, View):
             return JsonResponse({'status': 'error', 'message': e.message if hasattr(e, 'message') else str(e)}, status=400)
 
 
-class APIReportView(LoginRequiredMixin, View):
+class APIReportView(LoginRequiredMixin, StaffRequiredMixin, View):
     """Returns JSON report summary and entry list."""
     def get(self, request):
         session_id = request.GET.get('session_id', '').strip()
@@ -409,7 +477,7 @@ class APIReportView(LoginRequiredMixin, View):
         })
 
 
-class APIEditView(LoginRequiredMixin, View):
+class APIEditView(LoginRequiredMixin, StaffRequiredMixin, View):
     """Updates attendance sheet dynamically via JSON POST."""
     def post(self, request):
         try:

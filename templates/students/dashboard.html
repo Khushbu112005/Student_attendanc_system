@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="dashboard-title">Student Portal Dashboard</div>
+
+<!-- Student Info Banner -->
+<div class="glass-panel" style="padding: 24px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <div style="width: 60px; height: 60px; border-radius: 16px; background: var(--primary-accent); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: white; box-shadow: 0 8px 20px rgba(96, 165, 250, 0.3);">
+            🎓
+        </div>
+        <div>
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">{{ student.name }}</h2>
+            <div style="font-size: 13px; color: var(--text-secondary); display: flex; gap: 16px; flex-wrap: wrap;">
+                <span><strong>Roll Number:</strong> #{{ student.roll_number }}</span>
+                <span><strong>Class:</strong> {{ student.class_name }}</span>
+                <span><strong>Section:</strong> {{ student.section }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overall Percentage Circle Badge -->
+    <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+        <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 2px;">Overall Attendance</div>
+            <div style="font-size: 13px; font-weight: 600; color: {% if attendance_percentage >= 75 %}var(--present-color){% else %}var(--absent-color){% endif %};">
+                {% if attendance_percentage >= 75 %}Safe (>= 75%){% else %}Attendance Shortage!{% endif %}
+            </div>
+        </div>
+        <div style="position: relative; width: 70px; height: 70px; border-radius: 50%; background: rgba(15, 23, 42, 0.4); border: 2px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: {% if attendance_percentage >= 75 %}#10b981{% else %}#f43f5e{% endif %}; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+            {{ attendance_percentage }}%
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<div class="metrics-grid" style="margin-bottom: 30px;">
+    <div class="glass-panel metric-card">
+        <div class="metric-label">Total Academic Days</div>
+        <div class="metric-value">{{ total_days }}</div>
+    </div>
+    
+    <div class="glass-panel metric-card present">
+        <div class="metric-label">Days Present</div>
+        <div class="metric-value">{{ present_days }}</div>
+    </div>
+    
+    <div class="glass-panel metric-card absent">
+        <div class="metric-label">Days Absent</div>
+        <div class="metric-value">{{ absent_days }}</div>
+    </div>
+</div>
+
+<!-- Attendance Record Table -->
+<div class="glass-panel" style="padding: 24px;">
+    <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+        📅 Attendance Log (Day-wise Record)
+    </div>
+    
+    <div class="table-responsive">
+        <table class="student-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 14px 10px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Date</th>
+                    <th style="padding: 14px 10px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Class & Section</th>
+                    <th style="padding: 14px 10px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Status</th>
+                    <th style="padding: 14px 10px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Marked By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if entries %}
+                    {% for entry in entries %}
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.01)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 16px 10px; font-size: 14px; font-weight: 600; color: var(--text-primary);">
+                            {{ entry.attendance_session.attendance_date|date:"Y-m-d" }}
+                        </td>
+                        <td style="padding: 16px 10px; font-size: 14px; color: var(--text-secondary);">
+                            {{ entry.attendance_session.class_name }} - {{ entry.attendance_session.section }}
+                        </td>
+                        <td style="padding: 16px 10px;">
+                            {% if entry.status == 'Present' %}
+                                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block;">
+                                    ● Present
+                                </span>
+                            {% else %}
+                                <span style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.25); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block;">
+                                    ● Absent
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 10px; font-size: 14px; color: var(--text-secondary);">
+                            {{ entry.attendance_session.marked_by.username|default:"System" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">
+                            No attendance records found for your account.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -35,7 +35,7 @@
                 </div>
                 <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
                     <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">{{ user.username }}</div>
-                    <div style="font-size: 11px; color: var(--text-secondary);">{% if user.is_superuser %}System Admin{% else %}Faculty Member{% endif %}</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">{% if user.is_superuser %}System Admin{% elif user.is_staff %}Faculty Member{% else %}Student Portal{% endif %}</div>
                 </div>
                 <button id="theme-toggle" class="btn-theme-toggle" title="Toggle Light/Dark Theme" style="font-size: 16px; padding: 4px;">🌙</button>
             </div>
@@ -53,6 +53,7 @@
                     </ul>
                 </div>
 
+                {% if user.is_staff %}
                 <div>
                     <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px; padding-left: 10px;">Academics</div>
                     <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px;">
@@ -84,6 +85,7 @@
                         </li>
                     </ul>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Sidebar Footer -->

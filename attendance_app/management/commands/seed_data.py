@@ -27,10 +27,12 @@ class Command(BaseCommand):
 
             # Clear existing application records to make seeding clean and repeatable
             AttendanceSession.objects.all().delete()
+            # Delete all student User records (non-staff, non-superuser)
+            User.objects.filter(is_staff=False, is_superuser=False).delete()
             Student.objects.all().delete()
             Teacher.objects.all().delete()
             ActivityLog.objects.all().delete()
-            self.stdout.write("Cleaned existing student, teacher, session, and activity records.")
+            self.stdout.write("Cleaned existing student, teacher, session, activity records, and student user accounts.")
 
             # 2. Seed Teachers
             teachers_data = [
@@ -76,8 +78,12 @@ class Command(BaseCommand):
             # Seed B.Tech CSE - Section A
             for idx, name in enumerate(students_10a, start=1):
                 email = f"{name.lower().replace(' ', '.')}@student.com"
+                username = name.lower().replace(' ', '.')
+                User.objects.filter(username=username).delete()
+                u = User.objects.create_user(username=username, email=email, password="password123")
                 students_list.append(
                     Student(
+                        user=u,
                         name=name,
                         roll_number=idx,
                         class_name="B.Tech CSE",
@@ -90,8 +96,12 @@ class Command(BaseCommand):
             # Seed B.Tech ECE - Section B
             for idx, name in enumerate(students_10b, start=1):
                 email = f"{name.lower().replace(' ', '.')}@student.com"
+                username = name.lower().replace(' ', '.')
+                User.objects.filter(username=username).delete()
+                u = User.objects.create_user(username=username, email=email, password="password123")
                 students_list.append(
                     Student(
+                        user=u,
                         name=name,
                         roll_number=idx,
                         class_name="B.Tech ECE",
