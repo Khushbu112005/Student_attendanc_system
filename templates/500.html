@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="glass-panel login-card" style="max-width: 500px;">
+        <div class="login-logo" style="font-size: 56px; background: linear-gradient(135deg, #f43f5e 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">500</div>
+        <h2 style="margin-bottom: 16px; font-weight: 700;">Internal Server Error</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 32px;">
+            An unexpected error occurred on the server. Please try again later.
+        </p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary" style="display: inline-flex; justify-content: center; width: 100%;">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

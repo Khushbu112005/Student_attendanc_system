@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Attendance - Attendance Portal{% endblock %}
+
+{% block content %}
+<!-- Global Toast Notifications Container -->
+<div id="toast-container" style="margin-bottom: 20px; display: none;">
+    <div id="toast-alert" class="alert">
+        <span id="toast-message"></span>
+        <button type="button" class="alert-close" onclick="document.getElementById('toast-container').style.display='none'">&times;</button>
+    </div>
+</div>
+
+<div class="glass-panel" style="padding: 24px; margin-bottom: 24px;">
+    <h1 class="panel-title" style="margin-bottom: 20px;">Mark Class Attendance</h1>
+    
+    <!-- Filter Bar to Search/Open Class -->
+    <form id="attendance-filter-form" class="filter-form">
+        <div class="form-group-inline">
+            <label for="date" class="form-label">Attendance Date</label>
+            <input type="date" name="date" id="date" class="form-input" required max="{{ today_str }}" value="{{ date_val|default:today_str }}">
+        </div>
+        
+        <div class="form-group-inline">
+            <label for="class_name" class="form-label">Class</label>
+            <select name="class_name" id="class_name" class="form-input" required>
+                <option value="">Select Class</option>
+                {% for cls in classes %}
+                <option value="{{ cls }}" {% if class_val == cls %}selected{% endif %}>Class {{ cls }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group-inline">
+            <label for="section" class="form-label">Section</label>
+            <select name="section" id="section" class="form-input" required>
+                <option value="">Select Section</option>
+                {% for sec in sections %}
+                <option value="{{ sec }}" {% if section_val == sec %}selected{% endif %}>{{ sec }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group-inline" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary">Open Sheets</button>
+        </div>
+    </form>
+</div>
+
+<!-- Dynamic Marking Sheets Container -->
+<div id="marking-sheet-container" class="glass-panel" style="padding: 24px; display: none; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 15px;">
+        <div>
+            <h2 id="sheet-title" style="font-size: 18px; font-weight: 600;">
+                Attendance Sheet
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">
+                Date: <strong id="sheet-date-text"></strong>
+            </p>
+        </div>
+        
+        <!-- Bulk Controls -->
+        <div class="attendance-actions" id="bulk-controls">
+            <button type="button" id="mark-all-present" class="btn btn-secondary" style="font-size: 13px; font-weight: 500;">
+                ✓ All Present
+            </button>
+            <button type="button" id="mark-all-absent" class="btn btn-secondary" style="font-size: 13px; font-weight: 500;">
+                ✗ All Absent
+            </button>
+        </div>
+    </div>
+
+    <!-- Soft Warning / Empty Class Box -->
+    <div id="empty-class-warning" style="text-align: center; padding: 40px; border: 1px dashed var(--absent-color); border-radius: 12px; background: rgba(244, 63, 94, 0.05); display: none;">
+        <p style="color: var(--absent-color); font-weight: 600; font-size: 16px; margin-bottom: 8px;">
+            ⚠️ Empty Class Warning
+        </p>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+            No students found for selected class and section.
+        </p>
+    </div>
+
+    <!-- Duplicate Record Alert Card -->
+    <div id="duplicate-warning" style="text-align: center; padding: 40px; border: 1px dashed #f59e0b; border-radius: 12px; background: rgba(245, 158, 11, 0.05); display: none;">
+        <p style="color: #f59e0b; font-weight: 600; font-size: 16px; margin-bottom: 8px;">
+            ⚠️ Duplicate Sheet Warning
+        </p>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+            Attendance already exists for this date. Please edit the existing attendance record.
+        </p>
+        <button type="button" id="go-to-edit-btn" class="btn btn-accent">✏️ Edit Existing Sheet</button>
+    </div>
+
+    <!-- Sheet Form -->
+    <form id="attendance-sheet-form">
+        <div class="table-container" id="sheet-table-wrapper">
+            <table class="glass-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Roll Number</th>
+                        <th>Student Name</th>
+                        <th style="width: 250px; text-align: right;">Status Toggle</th>
+                    </tr>
+                </thead>
+                <tbody id="student-rows">
+                    <!-- Loaded dynamically via AJAX -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="form-actions" id="sheet-form-actions">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('marking-sheet-container').style.display='none'">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Attendance</button>
+        </div>
+    </form>
+</div>
+
+<!-- Dynamic Reports Container (Shows instantly on successful mark!) -->
+<div id="report-sheet-container" class="glass-panel" style="padding: 24px; display: none;">
+    <!-- Populated dynamically -->
+</div>
+{% endblock %}

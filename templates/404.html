@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="glass-panel login-card" style="max-width: 500px;">
+        <div class="login-logo" style="font-size: 56px;">404</div>
+        <h2 style="margin-bottom: 16px; font-weight: 700;">Page Not Found</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 32px;">
+            The requested page does not exist or has been moved.
+        </p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary" style="display: inline-flex; justify-content: center; width: 100%;">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

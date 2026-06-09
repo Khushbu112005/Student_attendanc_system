@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Confirmation - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="glass-panel login-card" style="max-width: 500px;">
+        <div class="login-logo" style="background: linear-gradient(135deg, #f43f5e 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            ⚠️ Confirm Deletion
+        </div>
+        
+        <h3 style="margin-bottom: 16px; font-weight: 600;">Are you sure?</h3>
+        
+        <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px;">
+            {% if is_teacher %}
+            You are about to permanently delete teacher record: <strong style="color: white;">{{ object.name }}</strong> (Employee ID: {{ object.employee_id }}).
+            {% else %}
+            You are about to permanently delete student record: <strong style="color: white;">{{ object.name }}</strong> (Roll: {{ object.roll_number }}, Class: {{ object.class_name }}-{{ object.section }}).
+            This action will also delete all associated attendance entries and cannot be undone.
+            {% endif %}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <a href="{% if is_teacher %}{% url 'teacher_list' %}{% else %}{% url 'student_list' %}{% endif %}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+                <button type="submit" class="btn btn-danger" style="flex: 1;">Delete permanently</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

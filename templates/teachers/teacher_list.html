@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Teachers Directory - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 24px;">
+    <div class="panel-header">
+        <h1 class="panel-title">Teachers Directory</h1>
+        <a href="{% url 'teacher_add' %}" class="btn btn-accent">
+            ➕ Add Teacher
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        {% if teachers %}
+        <table class="glass-table">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td style="font-weight: 600;">{{ teacher.employee_id }}</td>
+                    <td style="font-weight: 500;">{{ teacher.name }}</td>
+                    <td><span class="badge" style="background: rgba(96, 165, 250, 0.1); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.2);">{{ teacher.subject }}</span></td>
+                    <td style="color: var(--text-secondary);">{{ teacher.email|default:"-" }}</td>
+                    <td style="color: var(--text-secondary);">{{ teacher.phone|default:"-" }}</td>
+                    <td style="text-align: right;">
+                        <div style="display: inline-flex; gap: 8px;">
+                            <a href="{% url 'teacher_edit' teacher.id %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Edit</a>
+                            <a href="{% url 'teacher_delete' teacher.id %}" class="btn btn-danger" style="padding: 6px 12px; font-size: 13px;">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 60px 0; color: var(--text-secondary);">
+            No teacher records found. Add teachers to display them.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1" class="page-link">&laquo; First</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="page-link">Prev</a>
+        {% endif %}
+
+        <span class="page-text">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="page-link">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

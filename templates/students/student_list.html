@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Students Directory - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 24px;">
+    <div class="panel-header">
+        <h1 class="panel-title">Students Directory</h1>
+        <a href="{% url 'student_add' %}" class="btn btn-accent">
+            ➕ Add Student
+        </a>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-filters-bar">
+        <form method="get" class="filter-form">
+            <div class="form-group-inline">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" name="search" id="search" class="form-input" placeholder="Search by name or roll..." value="{{ search_val }}">
+            </div>
+            
+            <div class="form-group-inline">
+                <label for="class_name" class="form-label">Class</label>
+                <select name="class_name" id="class_name" class="form-input" style="min-width: 120px;">
+                    <option value="">All Classes</option>
+                    {% for cls in classes %}
+                    <option value="{{ cls }}" {% if class_val == cls %}selected{% endif %}>Class {{ cls }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group-inline">
+                <label for="section" class="form-label">Section</label>
+                <select name="section" id="section" class="form-input" style="min-width: 120px;">
+                    <option value="">All Sections</option>
+                    {% for sec in sections %}
+                    <option value="{{ sec }}" {% if section_val == sec %}selected{% endif %}>{{ sec }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group-inline" style="align-self: flex-end;">
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="{% url 'student_list' %}" class="btn btn-secondary">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        {% if students %}
+        <table class="glass-table">
+            <thead>
+                <tr>
+                    <th>Roll Number</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Section</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td style="font-weight: 600;">{{ student.roll_number }}</td>
+                    <td style="font-weight: 500;">{{ student.name }}</td>
+                    <td>Class {{ student.class_name }}</td>
+                    <td>{{ student.section }}</td>
+                    <td style="color: var(--text-secondary);">{{ student.email|default:"-" }}</td>
+                    <td style="color: var(--text-secondary);">{{ student.phone|default:"-" }}</td>
+                    <td style="text-align: right;">
+                        <div style="display: inline-flex; gap: 8px;">
+                            <a href="{% url 'student_edit' student.id %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Edit</a>
+                            <a href="{% url 'student_delete' student.id %}" class="btn btn-danger" style="padding: 6px 12px; font-size: 13px;">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 60px 0; color: var(--text-secondary);">
+            No student records found matching the filters.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if search_val %}&search={{ search_val }}{% endif %}{% if class_val %}&class_name={{ class_val }}{% endif %}{% if section_val %}&section={{ section_val }}{% endif %}" class="page-link">&laquo; First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if search_val %}&search={{ search_val }}{% endif %}{% if class_val %}&class_name={{ class_val }}{% endif %}{% if section_val %}&section={{ section_val }}{% endif %}" class="page-link">Prev</a>
+        {% endif %}
+
+        <span class="page-text">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search_val %}&search={{ search_val }}{% endif %}{% if class_val %}&class_name={{ class_val }}{% endif %}{% if section_val %}&section={{ section_val }}{% endif %}" class="page-link">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_val %}&search={{ search_val }}{% endif %}{% if class_val %}&class_name={{ class_val }}{% endif %}{% if section_val %}&section={{ section_val }}{% endif %}" class="page-link">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

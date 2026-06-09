@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="dashboard-title">System Dashboard</div>
+
+<!-- Metrics Cards -->
+<div class="metrics-grid">
+    <div class="glass-panel metric-card">
+        <div class="metric-label">Total Enrolled Students</div>
+        <div class="metric-value">{{ total_students }}</div>
+    </div>
+    
+    <div class="glass-panel metric-card">
+        <div class="metric-label">Total Faculty Members</div>
+        <div class="metric-value">{{ total_teachers }}</div>
+    </div>
+    
+    <div class="glass-panel metric-card present">
+        <div class="metric-label">Students Present Today</div>
+        <div class="metric-value">{{ present_today }}</div>
+    </div>
+    
+    <div class="glass-panel metric-card absent">
+        <div class="metric-label">Students Absent Today</div>
+        <div class="metric-value">{{ absent_today }}</div>
+    </div>
+</div>
+
+<!-- Layout: Activity Feed & Quick Actions -->
+<div class="actions-grid">
+    <!-- Recent Activity Feed -->
+    <div class="glass-panel recent-activity-panel">
+        <div class="activity-title">Recent Activity Feed</div>
+        <div class="activity-list">
+            {% if recent_activities %}
+                {% for activity in recent_activities %}
+                <div class="activity-item">
+                    <div class="activity-meta">
+                        <span style="font-weight: 600; color: #60a5fa;">{{ activity.activity_type }}</span>
+                        <span>{{ activity.created_at|date:"Y-m-d H:i:s" }}</span>
+                    </div>
+                    <div class="activity-desc">{{ activity.description }}</div>
+                    <div style="font-size: 11px; color: var(--text-secondary); text-align: right;">
+                        by {{ activity.user.username|default:"System" }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; color: var(--text-secondary); padding: 40px 0;">
+                    No activities recorded yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Actions Panel -->
+    <div class="glass-panel quick-links-panel">
+        <div class="activity-title">Quick Tasks</div>
+        
+        <a href="{% url 'mark_attendance' %}" class="quick-btn quick-btn-primary">
+            <span>📝 Mark Attendance</span>
+        </a>
+        
+        <a href="{% url 'attendance_report' %}" class="quick-btn quick-btn-secondary">
+            <span>📊 View Attendance Reports</span>
+        </a>
+        
+        <a href="{% url 'student_add' %}" class="quick-btn quick-btn-secondary">
+            <span>➕ Add New Student</span>
+        </a>
+        
+        <a href="{% url 'teacher_add' %}" class="quick-btn quick-btn-secondary">
+            <span>👨‍🏫 Add New Teacher</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

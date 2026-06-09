@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Attendance - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 24px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 15px;">
+        <div>
+            <h1 class="panel-title" style="font-size: 20px; font-weight: 700;">
+                Correct Attendance Sheet: Class {{ session.class_name }}-{{ session.section }}
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">
+                Date: <strong>{{ session.attendance_date }}</strong>
+            </p>
+        </div>
+        
+        <!-- Bulk Controls -->
+        <div class="attendance-actions">
+            <button type="button" id="mark-all-present" class="btn btn-secondary" style="font-size: 13px; font-weight: 500;">
+                ✓ All Present
+            </button>
+            <button type="button" id="mark-all-absent" class="btn btn-secondary" style="font-size: 13px; font-weight: 500;">
+                ✗ All Absent
+            </button>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="table-container">
+            <table class="glass-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Roll Number</th>
+                        <th>Student Name</th>
+                        <th style="width: 250px; text-align: right;">Status Toggle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ entry.student.roll_number }}</td>
+                        <td style="font-weight: 500;">{{ entry.student.name }}</td>
+                        <td style="text-align: right;">
+                            <!-- Hidden input storing status value -->
+                            <input type="hidden" name="status_{{ entry.student.id }}" id="status-input-{{ entry.student.id }}" value="{{ entry.status }}">
+                            
+                            <!-- Custom Glass Toggles loaded with existing values -->
+                            <div class="status-toggle">
+                                <span class="toggle-option toggle-present {% if entry.status == 'Present' %}active{% endif %}" data-student-id="{{ entry.student.id }}">
+                                    Present
+                                </span>
+                                <span class="toggle-option toggle-absent {% if entry.status == 'Absent' %}active{% endif %}" data-student-id="{{ entry.student.id }}">
+                                    Absent
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Mandatory Reason for Modification -->
+        <div class="glass-panel" style="padding: 20px; margin-top: 24px; background: rgba(15, 23, 42, 0.4);">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="edit_reason" class="form-label" style="font-weight: 600; color: var(--text-primary);">
+                    Reason for Modification <span style="color: var(--absent-color);">*</span>
+                </label>
+                <textarea name="edit_reason" id="edit_reason" class="form-input" style="width: 100%; min-height: 80px; resize: vertical;" required placeholder="Please explain why these attendance records are being corrected (e.g., student arrived late, entry error)..."></textarea>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="/attendance/report/?date={{ session.attendance_date|date:'Y-m-d' }}&session_id={{ session.id }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Modifications</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

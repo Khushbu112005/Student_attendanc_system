@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report - Attendance Portal{% endblock %}
+
+{% block content %}
+<!-- Global Toast Notifications Container -->
+<div id="toast-container" style="margin-bottom: 20px; display: none;">
+    <div id="toast-alert" class="alert">
+        <span id="toast-message"></span>
+        <button type="button" class="alert-close" onclick="document.getElementById('toast-container').style.display='none'">&times;</button>
+    </div>
+</div>
+
+<div class="glass-panel" style="padding: 24px; margin-bottom: 24px;">
+    <h1 class="panel-title" style="margin-bottom: 20px;">Attendance Report Search</h1>
+    
+    <form id="report-search-form" class="filter-form">
+        <div class="form-group-inline">
+            <label for="date" class="form-label">Search Date</label>
+            <input type="date" name="date" id="date" class="form-input" required max="{{ today_str }}" value="{{ date_val|default:today_str }}">
+        </div>
+        
+        <div class="form-group-inline" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary">Find Sessions</button>
+        </div>
+    </form>
+</div>
+
+<!-- Sessions Selection Bar -->
+<div id="sessions-panel" class="glass-panel" style="padding: 24px; margin-bottom: 24px; display: none;">
+    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">
+        Available Attendance Sheets on <span id="sessions-date-text"></span>
+    </h2>
+    <div id="sessions-list" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <!-- Loaded dynamically -->
+    </div>
+</div>
+
+<!-- Dynamic Report Display Container -->
+<div id="report-display-container" class="glass-panel" style="padding: 24px; display: none; margin-bottom: 24px;">
+    <!-- Loaded dynamically via AJAX -->
+</div>
+
+<!-- Dynamic Editing Sheet Container -->
+<div id="editing-sheet-container" class="glass-panel" style="padding: 24px; display: none;">
+    <!-- Loaded dynamically when user clicks Edit -->
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Student{% else %}Add Student{% endif %} - Attendance Portal{% endblock %}
+
+{% block content %}
+<div class="glass-panel form-panel">
+    <h1 class="panel-title" style="margin-bottom: 24px; text-align: center;">
+        {% if object %}📝 Edit Student Record{% else %}➕ Add Student Record{% endif %}
+    </h1>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div style="color: var(--absent-color); font-size: 14px; margin-bottom: 20px; font-weight: 500;">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}" class="form-label">Full Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <span style="color: var(--absent-color); font-size: 12px; margin-top: 4px;">{{ form.name.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.roll_number.id_for_label }}" class="form-label">Roll Number</label>
+            {{ form.roll_number }}
+            {% if form.roll_number.errors %}
+            <span style="color: var(--absent-color); font-size: 12px; margin-top: 4px;">{{ form.roll_number.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label for="{{ form.class_name.id_for_label }}" class="form-label">Class</label>
+                {{ form.class_name }}
+                {% if form.class_name.errors %}
+                <span style="color: var(--absent-color); font-size: 12px; margin-top: 4px;">{{ form.class_name.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                {{ form.section }}
+                {% if form.section.errors %}
+                <span style="color: var(--absent-color); font-size: 12px; margin-top: 4px;">{{ form.section.errors.0 }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address (Optional)</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <span style="color: var(--absent-color); font-size: 12px; margin-top: 4px;">{{ form.email.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.phone.id_for_label }}" class="form-label">Phone Number (Optional)</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+            <span style="color: var(--absent-color); font-size: 12px; margin-top: 4px;">{{ form.phone.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'student_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Student</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
